@@ -29,6 +29,7 @@ export default function VerifyScreen({ navigation }) {
   // Result states
   const [resultState, setResultState] = useState(null); // 'SUCCESS' | 'REJECTED' | 'UNKNOWN'
   const [resultDetails, setResultDetails] = useState({});
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState(null);
 
   const cameraRef = useRef(null);
 
@@ -97,6 +98,7 @@ export default function VerifyScreen({ navigation }) {
         skipProcessing: false,
       });
 
+      setCapturedPhotoUri(photo.uri);
       setLoadingText('Analyzing credentials...');
 
       // Prepare form data
@@ -179,6 +181,8 @@ export default function VerifyScreen({ navigation }) {
         skipProcessing: false,
       });
 
+      setCapturedPhotoUri(photo.uri);
+
       if (timerRef.current) clearInterval(timerRef.current);
 
       setLoadingText('Verifying liveness proof...');
@@ -237,6 +241,7 @@ export default function VerifyScreen({ navigation }) {
   const handleReset = () => {
     setResultState(null);
     setResultDetails({});
+    setCapturedPhotoUri(null);
     setIsChallengeActive(false);
     setChallengeType('');
     setSessionId('');
@@ -254,13 +259,34 @@ export default function VerifyScreen({ navigation }) {
         <View style={styles.resultCard}>
           <View style={[
             styles.resultIconBg, 
-            { backgroundColor: isSuccess ? 'rgba(0, 255, 157, 0.1)' : isUnknown ? 'rgba(251, 146, 60, 0.1)' : 'rgba(255, 77, 109, 0.1)' }
+            { 
+              backgroundColor: isSuccess ? 'rgba(0, 255, 157, 0.1)' : isUnknown ? 'rgba(251, 146, 60, 0.1)' : 'rgba(255, 77, 109, 0.1)',
+              borderWidth: 3,
+              borderColor: isSuccess ? '#00FF9D' : isUnknown ? '#FB923C' : '#FF4D6D',
+            }
           ]}>
-            <Ionicons 
-              name={isSuccess ? 'checkmark-shield' : isUnknown ? 'warning-outline' : 'close-circle-outline'} 
-              size={72} 
-              color={isSuccess ? '#00FF9D' : isUnknown ? '#FB923C' : '#FF4D6D'} 
-            />
+            {capturedPhotoUri ? (
+              <Image 
+                source={{ uri: capturedPhotoUri }} 
+                style={styles.resultPhoto} 
+              />
+            ) : (
+              <Ionicons 
+                name={isSuccess ? 'checkmark-shield' : isUnknown ? 'warning-outline' : 'close-circle-outline'} 
+                size={72} 
+                color={isSuccess ? '#00FF9D' : isUnknown ? '#FB923C' : '#FF4D6D'} 
+              />
+            )}
+            <View style={[
+              styles.resultStatusBadge,
+              { backgroundColor: isSuccess ? '#00FF9D' : isUnknown ? '#FB923C' : '#FF4D6D' }
+            ]}>
+              <Ionicons 
+                name={isSuccess ? 'checkmark' : isUnknown ? 'help' : 'close'} 
+                size={16} 
+                color="#0A0F1E" 
+              />
+            </View>
           </View>
 
           <Text style={[
@@ -472,6 +498,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    position: 'relative',
+  },
+  resultPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+  },
+  resultStatusBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#0A0F1E',
   },
   resultTitle: {
     fontSize: 22,
