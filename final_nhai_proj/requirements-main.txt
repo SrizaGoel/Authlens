@@ -1,0 +1,6 @@
+# Install into: open-cv/venv  (main API server)
+flask
+flask-cors
+opencv-python
+mediapipe
+numpy

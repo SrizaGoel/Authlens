@@ -1,0 +1,5 @@
+# Install into: open-cv/deepface_env  (embedding subprocess only)
+deepface
+tensorflow
+opencv-python
+numpy
