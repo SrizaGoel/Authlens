@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ActivityIndicator,
@@ -101,34 +101,12 @@ export default function VerifyScreen({ navigation }) {
       setCapturedPhotoUri(photo.uri);
       setLoadingText('Analyzing credentials...');
 
-      // Prepare form data
-      const formData = new FormData();
-      console.log('PHOTO URI:', photo.uri);
-      console.log('PHOTO OBJECT:', photo);
-      formData.append('image', {
-        uri: photo.uri,
-        name: "verify.jpg",
-        type: "image/jpeg",
+      const response = await FileSystem.uploadAsync(`${BASE_URL}/verify`, photo.uri, {
+        httpMethod: 'POST',
+        uploadType: 1,
+        fieldName: 'image',
       });
-
-      // Use requestIdleCallback (or a setTimeout fallback) to avoid blocking the main thread
-      const idleFn = typeof requestIdleCallback === 'function'
-        ? requestIdleCallback
-        : (cb) => setTimeout(cb, 0);
-
-      const response = await new Promise((resolve, reject) => {
-        idleFn(() => {
-          axios
-            .post(`${BASE_URL}/verify`, formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-              timeout: 15000,
-            })
-            .then(resolve)
-            .catch(reject);
-        });
-      });
-
-      const data = response.data;
+      const data = JSON.parse(response.body);
 
       if (data.success && data.status === 'VERIFIED') {
         setResultState('SUCCESS');
@@ -187,19 +165,15 @@ export default function VerifyScreen({ navigation }) {
 
       setLoadingText('Verifying liveness proof...');
 
-      const formData = new FormData();
-      formData.append('session_id', sessionId);
-      formData.append('image', {
-        uri: photo.uri,
-        name: 'challenge_proof.jpg',
-        type: 'image/jpeg',
+      const response = await FileSystem.uploadAsync(`${BASE_URL}/verify-challenge`, photo.uri, {
+        httpMethod: 'POST',
+        uploadType: 1,
+        fieldName: 'image',
+        parameters: {
+          session_id: sessionId
+        }
       });
-
-      const response = await axios.post(`${BASE_URL}/verify-challenge`, formData, {
-        timeout: 60000,
-      });
-
-      const data = response.data;
+      const data = JSON.parse(response.body);
 
       if (data.success && data.status === 'VERIFIED') {
         setIsChallengeActive(false);

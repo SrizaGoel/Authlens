@@ -1,0 +1,2 @@
+activate deepface_env -> cd final_nhai/final_nhai_proj -> .\start_api.bat
+cd final_nhai/app -> npm start 

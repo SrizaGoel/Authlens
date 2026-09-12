@@ -7,6 +7,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import BASE_URL from '../config';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -65,29 +66,24 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('name', name.trim());
-      formData.append('image', {
-        uri: capturedPhoto.uri,
-        name: `${name.replace(/\s+/g, '_')}.jpg`,
-        type: 'image/jpeg',
+      const response = await FileSystem.uploadAsync(`${BASE_URL}/register-face`, capturedPhoto.uri, {
+        httpMethod: 'POST',
+        uploadType: 1,
+        fieldName: 'image',
+        parameters: {
+          name: name.trim()
+        }
       });
+      const data = JSON.parse(response.body);
 
-      const response = await axios.post(`${BASE_URL}/register-face`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 15000,
-      });
-
-      if (response.data.success) {
+      if (data.success) {
         Alert.alert(
           'Success',
-          response.data.message || 'Face registered successfully!',
+          data.message || 'Face registered successfully!',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
-        Alert.alert('Registration Failed', response.data.message || 'Could not register face.');
+        Alert.alert('Registration Failed', data.message || 'Could not register face.');
       }
     } catch (err) {
       console.log(err);

@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 const ENDPOINTS = {
   emulator: 'http://10.0.2.2:5000',
-  physical: 'http://192.168.1.10:5000',
+  physical: 'http://192.168.1.6:5000',
   localhost: 'http://localhost:5000',
 };
 
