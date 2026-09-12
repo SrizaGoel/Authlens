@@ -12,17 +12,32 @@ face_mesh = mp_face_mesh.FaceMesh(
 LEFT_TOP = 159
 LEFT_BOTTOM = 145
 
-def eye_distance(face_landmarks, h):
+LEFT_INNER = 133
+LEFT_OUTER = 33
 
+def get_ear(face_landmarks, w, h):
     top = face_landmarks.landmark[LEFT_TOP]
     bottom = face_landmarks.landmark[LEFT_BOTTOM]
+    inner = face_landmarks.landmark[LEFT_INNER]
+    outer = face_landmarks.landmark[LEFT_OUTER]
 
-    y1 = int(top.y * h)
-    y2 = int(bottom.y * h)
+    # Vertical distance
+    v_dist = math.hypot((top.x - bottom.x) * w, (top.y - bottom.y) * h)
+    
+    # Horizontal distance
+    h_dist = math.hypot((inner.x - outer.x) * w, (inner.y - outer.y) * h)
 
-    return abs(y2 - y1)
+    if h_dist == 0:
+        return 1.0
+
+    return v_dist / h_dist
 
 def detect_blink(frame):
+
+    h, w, _ = frame.shape
+    target_w = 480
+    target_h = int((target_w / w) * h)
+    frame = cv2.resize(frame, (target_w, target_h))
 
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -35,6 +50,6 @@ def detect_blink(frame):
 
     face_landmarks = results.multi_face_landmarks[0]
 
-    distance = eye_distance(face_landmarks, h)
+    ear = get_ear(face_landmarks, target_w, target_h)
 
-    return distance < 4
+    return ear < 0.25  # Standard EAR threshold for a blink

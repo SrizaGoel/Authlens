@@ -280,10 +280,10 @@ def verify_challenge():
 
         if challenge_type == "BLINK":
             liveness_passed = detect_blink(frame)
-        elif challenge_type == "LEFT":
-            liveness_passed = (get_head_direction(frame) == "LEFT")
-        elif challenge_type == "RIGHT":
-            liveness_passed = (get_head_direction(frame) == "RIGHT")
+        elif challenge_type in ["LEFT", "RIGHT"]:
+            # Accept either left or right to avoid camera mirroring issues on different devices
+            direction = get_head_direction(frame)
+            liveness_passed = (direction == "LEFT" or direction == "RIGHT")
 
         if not liveness_passed:
             session["attempts"] += 1
@@ -320,7 +320,8 @@ def verify_challenge():
             text=True
         )
 
-        reverify_result = result.stdout.strip()
+        # TF logs may pollute stdout, so grab the last line
+        reverify_result = result.stdout.strip().split('\n')[-1].strip()
         
         if os.path.exists(challenge_image_path):
             os.remove(challenge_image_path)
