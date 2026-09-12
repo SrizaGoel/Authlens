@@ -11,25 +11,24 @@ face_mesh = mp_face_mesh.FaceMesh(
 
 LEFT_TOP = 159
 LEFT_BOTTOM = 145
-
 LEFT_INNER = 133
 LEFT_OUTER = 33
 
-def get_ear(face_landmarks, w, h):
-    top = face_landmarks.landmark[LEFT_TOP]
-    bottom = face_landmarks.landmark[LEFT_BOTTOM]
-    inner = face_landmarks.landmark[LEFT_INNER]
-    outer = face_landmarks.landmark[LEFT_OUTER]
+RIGHT_TOP = 386
+RIGHT_BOTTOM = 374
+RIGHT_INNER = 362
+RIGHT_OUTER = 263
 
-    # Vertical distance
+def get_ear(face_landmarks, w, h, top_id, bottom_id, inner_id, outer_id):
+    top = face_landmarks.landmark[top_id]
+    bottom = face_landmarks.landmark[bottom_id]
+    inner = face_landmarks.landmark[inner_id]
+    outer = face_landmarks.landmark[outer_id]
+
     v_dist = math.hypot((top.x - bottom.x) * w, (top.y - bottom.y) * h)
-    
-    # Horizontal distance
     h_dist = math.hypot((inner.x - outer.x) * w, (inner.y - outer.y) * h)
 
-    if h_dist == 0:
-        return 1.0
-
+    if h_dist == 0: return 1.0
     return v_dist / h_dist
 
 def detect_blink(frame):
@@ -50,6 +49,9 @@ def detect_blink(frame):
 
     face_landmarks = results.multi_face_landmarks[0]
 
-    ear = get_ear(face_landmarks, target_w, target_h)
+    left_ear = get_ear(face_landmarks, target_w, target_h, LEFT_TOP, LEFT_BOTTOM, LEFT_INNER, LEFT_OUTER)
+    right_ear = get_ear(face_landmarks, target_w, target_h, RIGHT_TOP, RIGHT_BOTTOM, RIGHT_INNER, RIGHT_OUTER)
 
-    return ear < 0.25  # Standard EAR threshold for a blink
+    avg_ear = (left_ear + right_ear) / 2.0
+
+    return avg_ear < 0.3  # Extremely forgiving threshold for a half-blink
